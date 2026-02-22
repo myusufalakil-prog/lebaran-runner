@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌙 Lebaran Runner</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<canvas class="firework-canvas" id="fwCanvas"></canvas>
+
+<h1>🌙 Lebaran Runner 🌙</h1>
+<p class="subtitle">Minal Aidin Wal Faidzin 🤲</p>
+
+<div id="scoreBar">
+  <div class="score-item"><span>💰</span><span id="thrDisplay">0</span></div>
+  <div class="score-item"><span>🎆</span><span id="speedDisplay" style="font-size:0.8rem">x1.0</span></div>
+  <div class="score-item"><span>⭐</span><span id="scoreDisplay">0</span></div>
+  <div class="score-item"><span>🏆</span><span id="highScoreDisplay">0</span></div>
+  <div class="score-item"><span>🏃</span><span id="distDisplay">0m</span></div>
+  <div class="score-item" style="cursor:pointer;user-select:none;" id="muteBtn" onclick="toggleMute()"><span id="muteIcon">🔊</span></div>
+</div>
+
+
+<div id="loadingScreen" style="
+  position:fixed; inset:0; z-index:999;
+  background: linear-gradient(135deg, #0d0124, #2d0a5a);
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  font-family:'Fredoka One',cursive;
+">
+  <div style="font-size:3.5rem; margin-bottom:10px; animation: pulse 0.8s infinite alternate;">🌙</div>
+  <div style="color:#FFD700; font-size:2rem; text-shadow:0 0 20px #FFD70088; margin-bottom:6px;">Lebaran Runner</div>
+  <div style="color:#FFD70099; font-size:0.9rem; margin-bottom:30px; font-family:Nunito,sans-serif;">Minal Aidin Wal Faidzin 🤲</div>
+
+  <!-- loading bar -->
+  <div style="width:280px; height:14px; background:rgba(255,255,255,0.1); border-radius:999px; overflow:hidden; border:1px solid #FFD70044;">
+    <div id="loadBar" style="height:100%; width:0%; background:linear-gradient(90deg,#FFD700,#FF6B35); border-radius:999px; transition:width 0.1s;"></div>
+  </div>
+  <div id="loadText" style="color:#FFD70088; font-size:0.8rem; margin-top:10px; font-family:Nunito,sans-serif;">Menyiapkan ketupat...</div>
+
+  <!-- floating emojis -->
+  <div style="position:absolute;inset:0;pointer-events:none;overflow:hidden;" id="floatEmojis"></div>
+</div>
+
+
+<div id="gameWrapper">
+  <canvas id="gameCanvas" width="700" height="220"></canvas>
+  <div id="overlay">
+    <h2 id="overlayTitle">🌙 Lebaran Runner</h2>
+    <p id="overlayMsg">Kumpulkan amplop THR & kembang api, hindari batu! Lompat ke atas bedug 🥁</p>
+    <div class="final-score" id="finalScore"></div>
+    <button id="startBtn" onclick="startGame()">🎉 Mulai Main!</button>
+    <div id="controls">SPASI / ↑ / Tap = Lompat &nbsp;|&nbsp; ↓ = Jongkok</div>
+  </div>
+</div>
+
+  <script src="game.js"></script>
+</body>
+</html>
