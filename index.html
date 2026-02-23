@@ -10,52 +10,109 @@
 
 <canvas class="firework-canvas" id="fwCanvas"></canvas>
 
-<h1>🌙 Lebaran Runner 🌙</h1>
-<p class="subtitle">Minal Aidin Wal Faidzin 🤲</p>
+<!-- Rotate Warning -->
+<div id="rotateWarning">
+  <div class="rotate-icon">📱</div>
+  <div class="rotate-title">Putar HP kamu!</div>
+  <div class="rotate-desc">Game lebih enak di mode <strong>Landscape 🔄</strong></div>
+  <div class="rotate-arrow">↔️</div>
+</div>
 
+<!-- Loading Screen -->
+<div id="loadingScreen">
+  <div class="load-moon">🌙</div>
+  <div class="load-title">Lebaran Runner</div>
+  <div class="load-sub">Minal Aidin Wal Faidzin 🤲</div>
+  <div class="load-bar-wrap"><div id="loadBar"></div></div>
+  <div id="loadText">Menyiapkan ketupat...</div>
+  <div id="floatEmojis"></div>
+</div>
+
+<!-- Header -->
+<div id="header">
+  <h1>🌙 Lebaran Runner 🌙</h1>
+  <p class="subtitle">Minal Aidin Wal Faidzin 🤲</p>
+</div>
+
+<!-- Score Bar -->
 <div id="scoreBar">
-  <div class="score-item"><span>💰</span><span id="thrDisplay">0</span></div>
-  <div class="score-item"><span>🎆</span><span id="speedDisplay" style="font-size:0.8rem">x1.0</span></div>
-  <div class="score-item"><span>⭐</span><span id="scoreDisplay">0</span></div>
-  <div class="score-item"><span>🏆</span><span id="highScoreDisplay">0</span></div>
-  <div class="score-item"><span>🏃</span><span id="distDisplay">0m</span></div>
-  <div class="score-item" style="cursor:pointer;user-select:none;" id="muteBtn" onclick="toggleMute()"><span id="muteIcon">🔊</span></div>
-</div>
-
-
-<div id="loadingScreen" style="
-  position:fixed; inset:0; z-index:999;
-  background: linear-gradient(135deg, #0d0124, #2d0a5a);
-  display:flex; flex-direction:column;
-  align-items:center; justify-content:center;
-  font-family:'Fredoka One',cursive;
-">
-  <div style="font-size:3.5rem; margin-bottom:10px; animation: pulse 0.8s infinite alternate;">🌙</div>
-  <div style="color:#FFD700; font-size:2rem; text-shadow:0 0 20px #FFD70088; margin-bottom:6px;">Lebaran Runner</div>
-  <div style="color:#FFD70099; font-size:0.9rem; margin-bottom:30px; font-family:Nunito,sans-serif;">Minal Aidin Wal Faidzin 🤲</div>
-
-  <!-- loading bar -->
-  <div style="width:280px; height:14px; background:rgba(255,255,255,0.1); border-radius:999px; overflow:hidden; border:1px solid #FFD70044;">
-    <div id="loadBar" style="height:100%; width:0%; background:linear-gradient(90deg,#FFD700,#FF6B35); border-radius:999px; transition:width 0.1s;"></div>
+  <div class="score-item">
+    <span class="s-icon">💰</span>
+    <div class="s-info"><div class="s-label">THR</div><div class="s-val" id="thrDisplay">0</div></div>
   </div>
-  <div id="loadText" style="color:#FFD70088; font-size:0.8rem; margin-top:10px; font-family:Nunito,sans-serif;">Menyiapkan ketupat...</div>
-
-  <!-- floating emojis -->
-  <div style="position:absolute;inset:0;pointer-events:none;overflow:hidden;" id="floatEmojis"></div>
+  <div class="score-item">
+    <span class="s-icon">⭐</span>
+    <div class="s-info"><div class="s-label">Skor</div><div class="s-val" id="scoreDisplay">0</div></div>
+  </div>
+  <div class="score-item">
+    <span class="s-icon">🏆</span>
+    <div class="s-info"><div class="s-label">Rekor</div><div class="s-val" id="highScoreDisplay">0</div></div>
+  </div>
+  <div class="score-item">
+    <span class="s-icon">🏃</span>
+    <div class="s-info"><div class="s-label">Jarak</div><div class="s-val" id="distDisplay">0m</div></div>
+  </div>
+  <div class="score-item">
+    <span class="s-icon">🎆</span>
+    <div class="s-info"><div class="s-label">Speed</div><div class="s-val" id="speedDisplay">x1.0</div></div>
+  </div>
+  <div class="score-mute" id="muteBtn" onclick="toggleMute()"><span id="muteIcon">🔊</span></div>
 </div>
 
-
+<!-- Game -->
 <div id="gameWrapper">
   <canvas id="gameCanvas" width="700" height="220"></canvas>
+
+  <!-- Control Buttons: bottom LEFT inside canvas -->
+  <div id="inGameControls">
+    <div class="igc-btn jump-btn" ontouchstart="mobileJump()" onmousedown="mobileJump()">
+      <div class="igc-icon">⬆️</div>
+      <div class="igc-label">Lompat</div>
+    </div>
+    <div class="igc-btn duck-btn" ontouchstart="duck(true)" ontouchend="duck(false)" onmousedown="duck(true)" onmouseup="duck(false)">
+      <div class="igc-icon">⬇️</div>
+      <div class="igc-label">Jongkok</div>
+    </div>
+  </div>
+
+  <!-- Overlay -->
   <div id="overlay">
-    <h2 id="overlayTitle">🌙 Lebaran Runner</h2>
-    <p id="overlayMsg">Kumpulkan amplop THR & kembang api, hindari batu! Lompat ke atas bedug 🥁</p>
-    <div class="final-score" id="finalScore"></div>
-    <button id="startBtn" onclick="startGame()">🎉 Mulai Main!</button>
-    <div id="controls">SPASI / ↑ / Tap = Lompat &nbsp;|&nbsp; ↓ = Jongkok</div>
+    <div class="overlay-box">
+      <h2 id="overlayTitle">🌙 Lebaran Runner</h2>
+      <div class="final-score" id="finalScore"></div>
+      <p id="overlayMsg">Pilih karakter & mulai berlari!</p>
+
+      <div id="charSelect">
+        <div class="char-label">— Pilih Karakter —</div>
+        <div class="char-grid">
+          <div class="char-card selected" id="char-koko" onclick="selectChar('koko')">
+            <canvas class="char-preview" id="prev-koko" width="44" height="60"></canvas>
+            <div class="char-name">Ayah</div>
+          </div>
+          <div class="char-card" id="char-perempuan" onclick="selectChar('perempuan')">
+            <canvas class="char-preview" id="prev-perempuan" width="44" height="60"></canvas>
+            <div class="char-name">Ibu</div>
+          </div>
+          <div class="char-card" id="char-gadis" onclick="selectChar('gadis')">
+            <canvas class="char-preview" id="prev-gadis" width="44" height="60"></canvas>
+            <div class="char-name">Kakak</div>
+          </div>
+          <div class="char-card" id="char-anak" onclick="selectChar('anak')">
+            <canvas class="char-preview" id="prev-anak" width="44" height="60"></canvas>
+            <div class="char-name">Adik</div>
+          </div>
+          <div class="char-card" id="char-kakek" onclick="selectChar('kakek')">
+            <canvas class="char-preview" id="prev-kakek" width="44" height="60"></canvas>
+            <div class="char-name">Kakek</div>
+          </div>
+        </div>
+      </div>
+
+      <button id="startBtn" onclick="startGame()">🎉 Mulai Main!</button>
+    </div>
   </div>
 </div>
 
-  <script src="game.js"></script>
+<script src="game.js"></script>
 </body>
 </html>

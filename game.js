@@ -264,6 +264,7 @@ const GROUND = H - 40;
 const PLAYER_W = 32, PLAYER_H = 48;
 
 let gameState = 'idle'; // idle, playing, dead
+let selectedChar = 'koko'; // koko | perempuan | gadis | anak | kakek
 let score, thr, dist, speed, frame, obstacles, collectibles, bgX, bgX2, moonPulse;
 let highScore = parseInt(localStorage.getItem('lebaranHighScore') || '0');
 let player, keys = {};
@@ -382,62 +383,200 @@ function drawMosque(x, ground) {
   ctx.fill();
 }
 
-function drawPlayer(p) {
-  const x = p.x, y = p.ducking ? p.y + PLAYER_H*0.4 : p.y;
-  const ph = p.ducking ? PLAYER_H*0.6 : PLAYER_H;
-  const blink = p.invincible > 0 && Math.floor(frame/4)%2===0;
-  if (blink) return;
-
-  ctx.save();
+// ===== CHARACTER DRAWING =====
+function drawCharBase(x, y, ph, skinColor, bodyColor, accentColor) {
   // body
-  ctx.fillStyle = '#FFD700';
+  ctx.fillStyle = bodyColor;
   ctx.beginPath();
   ctx.roundRect(x+4, y+18, PLAYER_W-8, ph-18, 6);
   ctx.fill();
-
-  // baju (baju koko)
-  ctx.fillStyle = '#FFFFFF';
-  ctx.beginPath();
-  ctx.roundRect(x+6, y+20, PLAYER_W-12, ph-30, 5);
-  ctx.fill();
-  // kancing
-  ctx.fillStyle = '#FFD700';
-  for (let i=0;i<3;i++) ctx.fillRect(x+PLAYER_W/2-1, y+24+i*8, 2, 3);
-
   // head
-  ctx.fillStyle = '#FDBCB4';
+  ctx.fillStyle = skinColor;
   ctx.beginPath();
   ctx.arc(x+PLAYER_W/2, y+12, 13, 0, Math.PI*2);
   ctx.fill();
-
-  // peci (kopiah)
-  ctx.fillStyle = '#1a1a1a';
-  ctx.beginPath();
-  ctx.ellipse(x+PLAYER_W/2, y+3, 12, 5, 0, Math.PI, 0);
-  ctx.fill();
-  ctx.fillRect(x+PLAYER_W/2-12, y+2, 24, 4);
-  ctx.fillStyle = '#FFD700';
-  ctx.fillRect(x+PLAYER_W/2-12, y+1, 24, 2);
-
   // eyes
   ctx.fillStyle = '#333';
   ctx.beginPath(); ctx.arc(x+PLAYER_W/2-4, y+12, 2, 0, Math.PI*2); ctx.fill();
   ctx.beginPath(); ctx.arc(x+PLAYER_W/2+4, y+12, 2, 0, Math.PI*2); ctx.fill();
-
   // smile
   ctx.strokeStyle = '#333'; ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.arc(x+PLAYER_W/2, y+15, 4, 0.2, Math.PI-0.2);
   ctx.stroke();
+}
 
+function drawKoko(x, y, ph, ducking) {
+  // baju koko putih
+  ctx.fillStyle = '#FFFFFF';
+  ctx.beginPath(); ctx.roundRect(x+6, y+20, PLAYER_W-12, ph-30, 5); ctx.fill();
+  ctx.fillStyle = '#FFD700';
+  for (let i=0;i<3;i++) ctx.fillRect(x+PLAYER_W/2-1, y+24+i*8, 2, 3);
+  drawCharBase(x, y, ph, '#FDBCB4', '#FFD700', '#FFD700');
+  // peci
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath(); ctx.ellipse(x+PLAYER_W/2, y+3, 12, 5, 0, Math.PI, 0); ctx.fill();
+  ctx.fillRect(x+PLAYER_W/2-12, y+2, 24, 4);
+  ctx.fillStyle = '#FFD700';
+  ctx.fillRect(x+PLAYER_W/2-12, y+1, 24, 2);
   // legs
-  ctx.fillStyle = p.ducking ? '#FFD700' : '#2D7A3A';
-  if (!p.ducking) {
-    const legSwing = Math.sin(frame * 0.2) * 5;
-    ctx.fillRect(x+6, y+ph-12, 8, 14);
-    ctx.fillRect(x+PLAYER_W-14, y+ph-12, 8, 14);
-  }
+  ctx.fillStyle = ducking ? '#FFD700' : '#2D7A3A';
+  if (!ducking) { ctx.fillRect(x+6, y+ph-12, 8, 14); ctx.fillRect(x+PLAYER_W-14, y+ph-12, 8, 14); }
+}
 
+function drawPerempuan(x, y, ph, ducking) {
+  // mukena putih
+  ctx.fillStyle = '#F8F8FF';
+  ctx.beginPath(); ctx.roundRect(x+2, y+16, PLAYER_W-4, ph-16, 8); ctx.fill();
+  // detail bordir
+  ctx.strokeStyle = '#E8D5FF'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.roundRect(x+4, y+18, PLAYER_W-8, 14, 4); ctx.stroke();
+  drawCharBase(x, y, ph, '#FDBCB4', '#F8F8FF', '#9C27B0');
+  // hijab/kerudung
+  ctx.fillStyle = '#9C27B0';
+  ctx.beginPath();
+  ctx.arc(x+PLAYER_W/2, y+10, 14, Math.PI, 0); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(x+2, y+10, PLAYER_W-4, 16, 4); ctx.fill();
+  // hiasan kerudung
+  ctx.fillStyle = '#FFD700';
+  ctx.beginPath(); ctx.arc(x+PLAYER_W/2, y+10, 3, 0, Math.PI*2); ctx.fill();
+  // mata
+  ctx.fillStyle = '#333';
+  ctx.beginPath(); ctx.arc(x+PLAYER_W/2-4, y+14, 2, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x+PLAYER_W/2+4, y+14, 2, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(x+PLAYER_W/2, y+17, 3, 0.2, Math.PI-0.2); ctx.stroke();
+  // legs (tertutup mukena)
+  ctx.fillStyle = '#F8F8FF';
+  if (!ducking) { ctx.fillRect(x+6, y+ph-10, 8, 12); ctx.fillRect(x+PLAYER_W-14, y+ph-10, 8, 12); }
+}
+
+function drawAnak(x, y, ph, ducking) {
+  const scale = 0.8;
+  // baju warna-warni
+  ctx.fillStyle = '#FF6B35';
+  ctx.beginPath(); ctx.roundRect(x+5, y+20, PLAYER_W-10, ph-22, 5); ctx.fill();
+  // strip baju
+  ctx.fillStyle = '#FFD700';
+  ctx.fillRect(x+5, y+24, PLAYER_W-10, 3);
+  drawCharBase(x, y+4, ph*scale, '#FDBCB4', '#FF6B35', '#FF6B35');
+  // kepala lebih besar (anak-anak)
+  ctx.fillStyle = '#FDBCB4';
+  ctx.beginPath(); ctx.arc(x+PLAYER_W/2, y+14, 14, 0, Math.PI*2); ctx.fill();
+  // rambut
+  ctx.fillStyle = '#3E2723';
+  ctx.beginPath(); ctx.arc(x+PLAYER_W/2, y+8, 12, Math.PI, 0); ctx.fill();
+  ctx.fillRect(x+PLAYER_W/2-12, y+7, 24, 5);
+  // mata besar
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(x+PLAYER_W/2-5, y+14, 3.5, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x+PLAYER_W/2+5, y+14, 3.5, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#333';
+  ctx.beginPath(); ctx.arc(x+PLAYER_W/2-5, y+14, 2, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x+PLAYER_W/2+5, y+14, 2, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(x+PLAYER_W/2, y+18, 4, 0.2, Math.PI-0.2); ctx.stroke();
+  // celana pendek
+  ctx.fillStyle = '#1565C0';
+  if (!ducking) { ctx.fillRect(x+5, y+ph-14, 9, 15); ctx.fillRect(x+PLAYER_W-14, y+ph-14, 9, 15); }
+}
+
+
+function drawGadis(x, y, ph, ducking) {
+  // baju gamis modern - pink/tosca
+  ctx.fillStyle = '#E91E8C';
+  ctx.beginPath(); ctx.roundRect(x+3, y+17, PLAYER_W-6, ph-17, 7); ctx.fill();
+  // detail kerah
+  ctx.fillStyle = '#FF80C0';
+  ctx.beginPath(); ctx.roundRect(x+8, y+19, PLAYER_W-16, 10, 4); ctx.fill();
+  // motif bunga kecil
+  ctx.fillStyle = '#FF80C0';
+  for (let i=0;i<3;i++) {
+    ctx.beginPath(); ctx.arc(x+9, y+30+i*9, 2.5, 0, Math.PI*2); ctx.fill();
+  }
+  // head
+  ctx.fillStyle = '#FDBCB4';
+  ctx.beginPath(); ctx.arc(x+PLAYER_W/2, y+12, 12, 0, Math.PI*2); ctx.fill();
+  // hijab modern - tosca
+  ctx.fillStyle = '#00BCD4';
+  ctx.beginPath(); ctx.arc(x+PLAYER_W/2, y+9, 13, Math.PI, 0); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(x+3, y+9, PLAYER_W-6, 14, [0,0,8,8]); ctx.fill();
+  // rambut depan sedikit
+  ctx.fillStyle = '#3E2723';
+  ctx.fillRect(x+PLAYER_W/2-6, y+8, 12, 3);
+  // hijab bagian bawah / drapery
+  ctx.fillStyle = '#00ACC1';
+  ctx.beginPath(); ctx.moveTo(x+3, y+22); ctx.lineTo(x-4, y+35); ctx.lineTo(x+6, y+30); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(x+PLAYER_W-3, y+22); ctx.lineTo(x+PLAYER_W+4, y+35); ctx.lineTo(x+PLAYER_W-6, y+30); ctx.closePath(); ctx.fill();
+  // pin hijab
+  ctx.fillStyle = '#FFD700';
+  ctx.beginPath(); ctx.arc(x+PLAYER_W/2, y+22, 2.5, 0, Math.PI*2); ctx.fill();
+  // mata
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(x+PLAYER_W/2-4, y+13, 3, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x+PLAYER_W/2+4, y+13, 3, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#5D4037';
+  ctx.beginPath(); ctx.arc(x+PLAYER_W/2-4, y+13, 1.8, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x+PLAYER_W/2+4, y+13, 1.8, 0, Math.PI*2); ctx.fill();
+  // bulu mata
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x+PLAYER_W/2-6, y+11); ctx.lineTo(x+PLAYER_W/2-4, y+10); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x+PLAYER_W/2+6, y+11); ctx.lineTo(x+PLAYER_W/2+4, y+10); ctx.stroke();
+  // senyum
+  ctx.strokeStyle = '#E91E8C'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(x+PLAYER_W/2, y+16, 4, 0.2, Math.PI-0.2); ctx.stroke();
+  // kaki (tertutup gamis)
+  ctx.fillStyle = '#E91E8C';
+  if (!ducking) { ctx.fillRect(x+6, y+ph-10, 8, 12); ctx.fillRect(x+PLAYER_W-14, y+ph-10, 8, 12); }
+  // sepatu
+  ctx.fillStyle = '#00BCD4';
+  if (!ducking) { ctx.fillRect(x+5, y+ph+2, 10, 5); ctx.fillRect(x+PLAYER_W-15, y+ph+2, 10, 5); }
+}
+
+function drawKakek(x, y, ph, ducking) {
+  // baju batik
+  ctx.fillStyle = '#795548';
+  ctx.beginPath(); ctx.roundRect(x+4, y+18, PLAYER_W-8, ph-18, 6); ctx.fill();
+  // motif batik sederhana
+  ctx.fillStyle = '#FFD700';
+  for (let i=0;i<3;i++) for (let j=0;j<2;j++) {
+    ctx.beginPath(); ctx.arc(x+9+j*12, y+22+i*9, 2, 0, Math.PI*2); ctx.fill();
+  }
+  drawCharBase(x, y, ph, '#D4A574', '#795548', '#795548');
+  // rambut putih
+  ctx.fillStyle = '#EEEEEE';
+  ctx.beginPath(); ctx.arc(x+PLAYER_W/2, y+6, 11, Math.PI, 0); ctx.fill();
+  ctx.fillRect(x+PLAYER_W/2-11, y+5, 22, 5);
+  // jenggot
+  ctx.fillStyle = '#EEEEEE';
+  ctx.beginPath(); ctx.arc(x+PLAYER_W/2, y+20, 7, 0, Math.PI); ctx.fill();
+  // mata sipit (tua)
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(x+PLAYER_W/2-7, y+11); ctx.lineTo(x+PLAYER_W/2-3, y+11); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x+PLAYER_W/2+3, y+11); ctx.lineTo(x+PLAYER_W/2+7, y+11); ctx.stroke();
+  // senyum
+  ctx.beginPath(); ctx.arc(x+PLAYER_W/2, y+16, 4, 0.3, Math.PI-0.3); ctx.stroke();
+  // tongkat
+  ctx.strokeStyle = '#5D4037'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(x+PLAYER_W+2, y+20); ctx.lineTo(x+PLAYER_W+2, y+ph+2); ctx.stroke();
+  ctx.strokeStyle = '#795548'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(x+PLAYER_W-2, y+20); ctx.lineTo(x+PLAYER_W+6, y+20); ctx.stroke();
+  // sarung/celana
+  ctx.fillStyle = '#4E342E';
+  if (!ducking) { ctx.fillRect(x+6, y+ph-12, 8, 14); ctx.fillRect(x+PLAYER_W-14, y+ph-12, 8, 14); }
+}
+
+function drawPlayer(p) {
+  const x = p.x, y = p.ducking ? p.y + PLAYER_H*0.4 : p.y;
+  const ph = p.ducking ? PLAYER_H*0.6 : PLAYER_H;
+  const blink = p.invincible > 0 && Math.floor(frame/4)%2===0;
+  if (blink) return;
+  ctx.save();
+  if      (selectedChar === 'koko')      drawKoko(x, y, ph, p.ducking);
+  else if (selectedChar === 'perempuan') drawPerempuan(x, y, ph, p.ducking);
+  else if (selectedChar === 'gadis')     drawGadis(x, y, ph, p.ducking);
+  else if (selectedChar === 'anak')      drawAnak(x, y, ph, p.ducking);
+  else if (selectedChar === 'kakek')     drawKakek(x, y, ph, p.ducking);
   ctx.restore();
 }
 
@@ -919,6 +1058,21 @@ function drawPickups() {
   pickups = pickups.filter(p => p.t > 0);
 }
 
+
+// Mobile jump button (prevents double trigger)
+function mobileJump() {
+  if (gameState === 'playing') jump();
+}
+
+// Show/hide mobile controls based on game state
+function updateMobileControls() {
+  const ctrls = document.querySelectorAll('.igc-btn');
+  ctrls.forEach(c => {
+    c.style.opacity = gameState === 'playing' ? '1' : '0.4';
+    c.style.pointerEvents = gameState === 'playing' ? 'auto' : 'none';
+  });
+}
+
 function jump() {
   if (player.jumpCount < 2) {
     player.vy = -10.5;
@@ -945,6 +1099,11 @@ function startGame() {
   stopMusic();
   initGame();
   gameState = 'playing';
+  updateMobileControls();
+  // Reset overlay state
+  document.getElementById('overlayTitle').style.display = 'none';
+  document.getElementById('charSelect').style.display = 'flex';
+  document.getElementById('finalScore').textContent = '';
   document.getElementById('overlay').classList.add('hidden');
   fwActive = false;
   fireworks = [];
@@ -954,13 +1113,16 @@ function startGame() {
 
 function endGame() {
   gameState = 'dead';
+  updateMobileControls();
   fwActive = false;
   stopMusic();
   sfxGameOver();
   const ol = document.getElementById('overlay');
   ol.classList.remove('hidden');
   document.getElementById('overlayTitle').textContent = '💔 Game Over!';
-  document.getElementById('overlayMsg').textContent = 'Selamat Lebaran! Jangan lupa minta maaf ya 🤲';
+  document.getElementById('overlayTitle').style.display = 'block';
+  document.getElementById('charSelect').style.display = 'flex';
+  document.getElementById('overlayMsg').textContent = 'Selamat Lebaran! Jangan lupa minta maaf ya 🤲 — Ganti karakter atau main lagi!';
   const isNew = score >= highScore;
   document.getElementById('finalScore').textContent = `Skor: ${score}${isNew ? ' 🏆 REKOR BARU!' : ''} | THR: Rp ${thr.toLocaleString()}`;
   document.getElementById('startBtn').textContent = '🔁 Main Lagi';
@@ -1064,3 +1226,175 @@ setTimeout(()=>{ fwActive=false; fireworks=[]; }, 3000);
     }
   }, 320);
 })();
+// ===== ROTATE WARNING =====
+function checkOrientation() {
+  const warn = document.getElementById('rotateWarning');
+  if (!warn) return;
+  const isPortrait = window.innerHeight > window.innerWidth;
+  const isMobile = window.innerWidth <= 900;
+  if (isMobile && isPortrait) {
+    warn.style.display = 'flex';
+  } else {
+    warn.style.display = 'none';
+  }
+}
+window.addEventListener('resize', checkOrientation);
+window.addEventListener('orientationchange', checkOrientation);
+checkOrientation();
+
+
+// ===== CHARACTER SELECTION =====
+function selectChar(id) {
+  selectedChar = id;
+  document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('char-' + id).classList.add('selected');
+  renderPreviews();
+}
+
+function renderCharOnCanvas(canvasId, charId) {
+  const cv = document.getElementById(canvasId);
+  if (!cv) return;
+  const c = cv.getContext('2d');
+  c.clearRect(0, 0, cv.width, cv.height);
+
+  // Temporarily redirect ctx to this preview canvas
+  const oldCtx = ctx;
+  // We'll draw using a fake player object scaled to the preview
+  const scale = cv.width / 48;
+  c.save();
+  c.scale(scale, scale);
+
+  // fake frame for leg animation
+  const fakeP = { x: 0, y: 8, ducking: false, invincible: 0 };
+  const fakeFrame = 0;
+  const ph = PLAYER_H;
+
+  // manually call draw functions on preview context
+  const pc = c;
+
+  function previewBase(skinColor, bodyColor) {
+    pc.fillStyle = bodyColor;
+    pc.beginPath(); pc.roundRect(4, 26, PLAYER_W-8, ph-18, 6); pc.fill();
+    pc.fillStyle = skinColor;
+    pc.beginPath(); pc.arc(PLAYER_W/2, 20, 13, 0, Math.PI*2); pc.fill();
+    pc.fillStyle = '#333';
+    pc.beginPath(); pc.arc(PLAYER_W/2-4, 20, 2, 0, Math.PI*2); pc.fill();
+    pc.beginPath(); pc.arc(PLAYER_W/2+4, 20, 2, 0, Math.PI*2); pc.fill();
+    pc.strokeStyle = '#333'; pc.lineWidth = 1.5;
+    pc.beginPath(); pc.arc(PLAYER_W/2, 23, 4, 0.2, Math.PI-0.2); pc.stroke();
+  }
+
+  if (charId === 'koko') {
+    pc.fillStyle = '#FFFFFF';
+    pc.beginPath(); pc.roundRect(6, 28, PLAYER_W-12, ph-30, 5); pc.fill();
+    pc.fillStyle = '#FFD700';
+    for (let i=0;i<3;i++) pc.fillRect(PLAYER_W/2-1, 32+i*8, 2, 3);
+    previewBase('#FDBCB4', '#FFD700');
+    pc.fillStyle = '#1a1a1a';
+    pc.beginPath(); pc.ellipse(PLAYER_W/2, 11, 12, 5, 0, Math.PI, 0); pc.fill();
+    pc.fillRect(PLAYER_W/2-12, 10, 24, 4);
+    pc.fillStyle = '#FFD700'; pc.fillRect(PLAYER_W/2-12, 9, 24, 2);
+    pc.fillStyle = '#2D7A3A';
+    pc.fillRect(6, ph+2, 8, 12); pc.fillRect(PLAYER_W-14, ph+2, 8, 12);
+
+  } else if (charId === 'perempuan') {
+    pc.fillStyle = '#F8F8FF';
+    pc.beginPath(); pc.roundRect(2, 24, PLAYER_W-4, ph-16, 8); pc.fill();
+    previewBase('#FDBCB4', '#F8F8FF');
+    pc.fillStyle = '#9C27B0';
+    pc.beginPath(); pc.arc(PLAYER_W/2, 18, 14, Math.PI, 0); pc.fill();
+    pc.beginPath(); pc.roundRect(2, 18, PLAYER_W-4, 16, 4); pc.fill();
+    pc.fillStyle = '#FFD700';
+    pc.beginPath(); pc.arc(PLAYER_W/2, 18, 3, 0, Math.PI*2); pc.fill();
+    pc.fillStyle = '#333';
+    pc.beginPath(); pc.arc(PLAYER_W/2-4, 22, 2, 0, Math.PI*2); pc.fill();
+    pc.beginPath(); pc.arc(PLAYER_W/2+4, 22, 2, 0, Math.PI*2); pc.fill();
+    pc.fillStyle = '#F8F8FF';
+    pc.fillRect(6, ph+2, 8, 12); pc.fillRect(PLAYER_W-14, ph+2, 8, 12);
+
+  } else if (charId === 'anak') {
+    pc.fillStyle = '#FF6B35';
+    pc.beginPath(); pc.roundRect(5, 28, PLAYER_W-10, ph-22, 5); pc.fill();
+    pc.fillStyle = '#FFD700'; pc.fillRect(5, 32, PLAYER_W-10, 3);
+    pc.fillStyle = '#FDBCB4';
+    pc.beginPath(); pc.arc(PLAYER_W/2, 22, 14, 0, Math.PI*2); pc.fill();
+    pc.fillStyle = '#3E2723';
+    pc.beginPath(); pc.arc(PLAYER_W/2, 16, 12, Math.PI, 0); pc.fill();
+    pc.fillRect(PLAYER_W/2-12, 15, 24, 5);
+    pc.fillStyle = '#fff';
+    pc.beginPath(); pc.arc(PLAYER_W/2-5, 22, 3.5, 0, Math.PI*2); pc.fill();
+    pc.beginPath(); pc.arc(PLAYER_W/2+5, 22, 3.5, 0, Math.PI*2); pc.fill();
+    pc.fillStyle = '#333';
+    pc.beginPath(); pc.arc(PLAYER_W/2-5, 22, 2, 0, Math.PI*2); pc.fill();
+    pc.beginPath(); pc.arc(PLAYER_W/2+5, 22, 2, 0, Math.PI*2); pc.fill();
+    pc.strokeStyle = '#333'; pc.lineWidth = 1.5;
+    pc.beginPath(); pc.arc(PLAYER_W/2, 26, 4, 0.2, Math.PI-0.2); pc.stroke();
+    pc.fillStyle = '#1565C0';
+    pc.fillRect(5, ph+2, 9, 13); pc.fillRect(PLAYER_W-14, ph+2, 9, 13);
+
+  } else if (charId === 'gadis') {
+    // gamis pink
+    pc.fillStyle = '#E91E8C';
+    pc.beginPath(); pc.roundRect(3, 25, PLAYER_W-6, ph-17, 7); pc.fill();
+    pc.fillStyle = '#FF80C0';
+    pc.beginPath(); pc.roundRect(8, 27, PLAYER_W-16, 10, 4); pc.fill();
+    for (let i=0;i<3;i++) {
+      pc.fillStyle = '#FF80C0';
+      pc.beginPath(); pc.arc(9, 38+i*9, 2.5, 0, Math.PI*2); pc.fill();
+    }
+    // head
+    pc.fillStyle = '#FDBCB4';
+    pc.beginPath(); pc.arc(PLAYER_W/2, 20, 12, 0, Math.PI*2); pc.fill();
+    // hijab tosca
+    pc.fillStyle = '#00BCD4';
+    pc.beginPath(); pc.arc(PLAYER_W/2, 17, 13, Math.PI, 0); pc.fill();
+    pc.beginPath(); pc.roundRect(3, 17, PLAYER_W-6, 14, [0,0,8,8]); pc.fill();
+    pc.fillStyle = '#FFD700';
+    pc.beginPath(); pc.arc(PLAYER_W/2, 30, 2.5, 0, Math.PI*2); pc.fill();
+    // mata
+    pc.fillStyle = '#fff';
+    pc.beginPath(); pc.arc(PLAYER_W/2-4, 21, 3, 0, Math.PI*2); pc.fill();
+    pc.beginPath(); pc.arc(PLAYER_W/2+4, 21, 3, 0, Math.PI*2); pc.fill();
+    pc.fillStyle = '#5D4037';
+    pc.beginPath(); pc.arc(PLAYER_W/2-4, 21, 1.8, 0, Math.PI*2); pc.fill();
+    pc.beginPath(); pc.arc(PLAYER_W/2+4, 21, 1.8, 0, Math.PI*2); pc.fill();
+    pc.strokeStyle = '#E91E8C'; pc.lineWidth = 1.5;
+    pc.beginPath(); pc.arc(PLAYER_W/2, 24, 4, 0.2, Math.PI-0.2); pc.stroke();
+    pc.fillStyle = '#E91E8C';
+    pc.fillRect(6, ph+2, 8, 12); pc.fillRect(PLAYER_W-14, ph+2, 8, 12);
+
+  } else if (charId === 'kakek') {
+    pc.fillStyle = '#795548';
+    pc.beginPath(); pc.roundRect(4, 26, PLAYER_W-8, ph-18, 6); pc.fill();
+    pc.fillStyle = '#FFD700';
+    for (let i=0;i<3;i++) for (let j=0;j<2;j++) {
+      pc.beginPath(); pc.arc(9+j*12, 30+i*9, 2, 0, Math.PI*2); pc.fill();
+    }
+    previewBase('#D4A574', '#795548');
+    pc.fillStyle = '#EEEEEE';
+    pc.beginPath(); pc.arc(PLAYER_W/2, 14, 11, Math.PI, 0); pc.fill();
+    pc.fillRect(PLAYER_W/2-11, 13, 22, 5);
+    pc.beginPath(); pc.arc(PLAYER_W/2, 28, 7, 0, Math.PI); pc.fill();
+    pc.strokeStyle = '#333'; pc.lineWidth = 1.5;
+    pc.beginPath(); pc.moveTo(PLAYER_W/2-7, 19); pc.lineTo(PLAYER_W/2-3, 19); pc.stroke();
+    pc.beginPath(); pc.moveTo(PLAYER_W/2+3, 19); pc.lineTo(PLAYER_W/2+7, 19); pc.stroke();
+    pc.beginPath(); pc.arc(PLAYER_W/2, 24, 4, 0.3, Math.PI-0.3); pc.stroke();
+    pc.strokeStyle = '#5D4037'; pc.lineWidth = 3;
+    pc.beginPath(); pc.moveTo(PLAYER_W+2, 28); pc.lineTo(PLAYER_W+2, ph+14); pc.stroke();
+    pc.fillStyle = '#4E342E';
+    pc.fillRect(6, ph+2, 8, 12); pc.fillRect(PLAYER_W-14, ph+2, 8, 12);
+  }
+
+  c.restore();
+}
+
+function renderPreviews() {
+  ['koko','perempuan','gadis','anak','kakek'].forEach(id => {
+    renderCharOnCanvas('prev-' + id, id);
+  });
+}
+
+// Render previews when page loads
+window.addEventListener('load', () => {
+  setTimeout(renderPreviews, 100);
+});
