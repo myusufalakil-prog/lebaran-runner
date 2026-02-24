@@ -1088,12 +1088,16 @@ function updateMobileControls() {
   });
 }
 
+let jumpLock = false;
 function jump() {
+  if (jumpLock) return;
   if (player.jumpCount < 2) {
     player.vy = -10.5;
     player.grounded = false;
     player.jumpCount++;
     sfxJump();
+    jumpLock = true;
+    setTimeout(() => { jumpLock = false; }, 150); // 150ms cooldown per jump
   }
 }
 
@@ -1153,12 +1157,13 @@ document.addEventListener('keyup', e => {
   if (e.code==='ArrowDown') duck(false);
 });
 
-// Touch on canvas (swipe down = duck, tap = jump)
+// Touch on canvas (swipe down = duck, tap anywhere on canvas = jump)
 let touchStartY = 0;
 let touchMoved = false;
 canvas.addEventListener('touchstart', e => {
   touchStartY = e.touches[0].clientY;
   touchMoved = false;
+  if (gameState === 'playing') jump(); // jump on touchstart for instant response
 }, {passive:true});
 canvas.addEventListener('touchmove', e => {
   if (e.touches[0].clientY - touchStartY > 30 && gameState==='playing') {
@@ -1168,8 +1173,6 @@ canvas.addEventListener('touchmove', e => {
 }, {passive:true});
 canvas.addEventListener('touchend', e => {
   duck(false);
-  // Only jump if it was a tap (no swipe)
-  if (!touchMoved && gameState==='playing') jump();
   touchMoved = false;
 }, {passive:true});
 
