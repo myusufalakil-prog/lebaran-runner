@@ -1059,8 +1059,23 @@ function drawPickups() {
 }
 
 
-// Mobile jump button (prevents double trigger)
-function mobileJump() {
+// Mobile jump - prevent double trigger (touch fires both touchstart AND mousedown on mobile)
+
+// Duck helpers - prevent double trigger on mobile
+function duckStart(e) {
+  if (e) e.preventDefault();
+  duck(true);
+}
+function duckEnd(e) {
+  if (e) e.preventDefault();
+  duck(false);
+}
+function duckToggle(e) {
+  // only fires on desktop click, not mobile touch
+}
+
+function mobileJump(e) {
+  if (e) e.preventDefault();
   if (gameState === 'playing') jump();
 }
 
@@ -1138,16 +1153,25 @@ document.addEventListener('keyup', e => {
   if (e.code==='ArrowDown') duck(false);
 });
 
-// Touch
+// Touch on canvas (swipe down = duck, tap = jump)
 let touchStartY = 0;
+let touchMoved = false;
 canvas.addEventListener('touchstart', e => {
   touchStartY = e.touches[0].clientY;
-  if (gameState==='playing') jump();
+  touchMoved = false;
 }, {passive:true});
 canvas.addEventListener('touchmove', e => {
-  if (e.touches[0].clientY - touchStartY > 30 && gameState==='playing') duck(true);
+  if (e.touches[0].clientY - touchStartY > 30 && gameState==='playing') {
+    duck(true);
+    touchMoved = true;
+  }
 }, {passive:true});
-canvas.addEventListener('touchend', () => duck(false), {passive:true});
+canvas.addEventListener('touchend', e => {
+  duck(false);
+  // Only jump if it was a tap (no swipe)
+  if (!touchMoved && gameState==='playing') jump();
+  touchMoved = false;
+}, {passive:true});
 
 // Idle draw
 function idleDraw() {

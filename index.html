@@ -65,11 +65,11 @@
 
   <!-- Control Buttons: bottom LEFT inside canvas -->
   <div id="inGameControls">
-    <div class="igc-btn jump-btn" ontouchstart="mobileJump()" onmousedown="mobileJump()">
+    <div class="igc-btn jump-btn" ontouchstart="mobileJump(event)" onclick="mobileJump(event)">
       <div class="igc-icon">⬆️</div>
       <div class="igc-label">Lompat</div>
     </div>
-    <div class="igc-btn duck-btn" ontouchstart="duck(true)" ontouchend="duck(false)" onmousedown="duck(true)" onmouseup="duck(false)">
+    <div class="igc-btn duck-btn" ontouchstart="duckStart(event)" ontouchend="duckEnd(event)" onclick="duckToggle(event)">
       <div class="igc-icon">⬇️</div>
       <div class="igc-label">Jongkok</div>
     </div>
